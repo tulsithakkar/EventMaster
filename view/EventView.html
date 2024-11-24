@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event App</title>
+    <script src="angular.js"></script>
+    <script src="EventController.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body ng-app="EventApp" ng-controller="eventCtrl">
+    <div class="container mt-5">
+        <h1 class="mb-4">EventMaster: Plan, Manage & Connect</h1>
+
+        <!-- Add New Event Card -->
+        <div class="card shadow-lg border-0 rounded">
+            <div class="card-header text-center bg-success text-white">
+                <h4 class="card-title">Add Event</h4>
+            </div>
+            <div ng-if="msg" class="alert" ng-class="{'alert-success': msg.indexOf('success') !== -1, 'alert-danger': msg.indexOf('Error') !== -1}">
+                {{ msg }}
+            </div>
+            <div class="card-body">
+                <form ng-submit="addEvent()" name="eventForm" novalidate>
+                    <div class="mb-4">
+                        <label for="eventTitle" class="form-label">Event Title</label>
+                        <input type="text" id="eventTitle" ng-model="newEvent.title" placeholder="Enter event title" class="form-control bg-light border-0 rounded-pill shadow-sm" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="eventDate" class="form-label">Event Date</label>
+                        <input type="date" id="eventDate" ng-model="newEvent.date" class="form-control bg-light border-0 rounded-pill shadow-sm" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="eventLocation" class="form-label">Location</label>
+                        <select id="eventLocation" ng-model="newEvent.location" class="form-select bg-light border-0 rounded-pill shadow-sm" required>
+                            <option value="" disabled selected>Select a location</option>
+                            <option value="Conference Room A">Conference Room A</option>
+                            <option value="Hall 1">Hall 1</option>
+                            <option value="Outdoor Area">Outdoor Area</option>
+                            <option value="Auditorium">Auditorium</option>
+                            <option value="Online (Zoom)">Online (Zoom)</option>
+                        </select>
+                    </div>
+                    <div class="mb-4 form-check">
+                        <input type="checkbox" id="remindMe" ng-model="newEvent.remind" class="form-check-input">
+                        <label class="form-check-label" for="remindMe">Remind me</label><br>
+                        <label class="form-label">Get Notification for the event</label>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-danger rounded-pill" ng-click="clearForm()">Clear</button>
+                        <button type="submit" class="btn btn-success rounded-pill" ng-disabled="eventForm.$invalid">Add Event</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <h2 class="text-center mt-5">Event Lists</h2>
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-md-4" ng-repeat="event in events" style="margin-bottom: 20px;">
+                        <div class="card h-100 border border-dark" style="border-width: 2px;">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ event.title }}</h5>
+                                <h6 class="card-subtitle mb-2 text-muted">{{ event.location }}</h6>
+                                <p class="card-text">{{ event.date | date: 'EEEE, d MMMM yyyy' }}</p>
+                                <div *ngIf="event.remind">
+                                    <svg viewBox="0 0 24 24" width="20"
+                                     height="20" xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                            d="m5.705 3.71-1.41-1.42C1 
+                                            5.563 1 7.935 1 11h1l1-.063C3 8.009 3
+                                             6.396 5.705 3.71zm13.999-1.42-1.408 1.42C21
+                                              6.396 21 8.009 21 11l2-.063c0-3.002 
+                                              0-5.374-3.296-8.647zM12 22a2.98 2.98 0 0 0 
+                                              2.818-2H9.182A2.98 2.98 0 0 0 12 
+                                              22zm7-7.414V10c0-3.217-2.185-5.927-5.145-6.742C13.562
+                                               2.52 12.846 2 12 2s-1.562.52-1.855 1.258C7.184
+                                                4.073 5 6.783 5 10v4.586l-1.707 1.707A.996.996
+                                                 0 0 0 3 17v1a1 1 0 0 0 1 1h16a1 
+                                                 1 0 0 0 1-1v-1a.996.996 0 0 0-.293-.707L19 14.586z" />
+                                    </svg>
+                                </div>
+                               
+                                <button class="btn btn-warning btn-sm" ng-click="setEditEvent(event)">Edit</button>
+                                <button class="btn btn-danger btn-sm" ng-click="deleteEvent(event._id)">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--update event -->
+        <div ng-if="editMode" class="container mt-5">
+            <div class="card shadow-lg border-0 rounded">
+                <div class="card-header text-center bg-success text-white">
+                    <h4 class="card-title">Edit Event</h4>
+                </div>
+                <div ng-if="msg" class="alert" ng-class="{'alert-success': msg.indexOf('success') !== -1, 'alert-danger': msg.indexOf('Error') !== -1}">
+                    {{ msg }}
+                </div>
+                <div class="card-body">
+                    <form ng-submit="updateEvent(selectedEvent)" name="eventEditForm" novalidate>
+                        <!-- Form Fields Here (same as Add Event) -->
+                        <div class="mb-4">
+                            <label for="editEventTitle" class="form-label">Event Title</label>
+                            <input type="text" id="editEventTitle" ng-model="selectedEvent.title" placeholder="Enter event title" class="form-control bg-light border-0 rounded-pill shadow-sm" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="editEventDate" class="form-label">Event Date</label>
+                            <input type="date" id="editEventDate" ng-model="selectedEvent.date" class="form-control bg-light border-0 rounded-pill shadow-sm" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="editEventLocation" class="form-label">Location</label>
+                            <select id="editEventLocation" ng-model="selectedEvent.location" class="form-select bg-light border-0 rounded-pill shadow-sm" required>
+                                <option value="" disabled>Select a location</option>
+                                <option value="Conference Room A">Conference Room A</option>
+                                <option value="Hall 1">Hall 1</option>
+                                <option value="Outdoor Area">Outdoor Area</option>
+                                <option value="Auditorium">Auditorium</option>
+                                <option value="Online (Zoom)">Online (Zoom)</option>
+                            </select>
+                        </div>
+                        <div class="mb-4 form-check">
+                            <input type="checkbox" id="editRemindMe" ng-model="selectedEvent.remind" class="form-check-input">
+                            <label class="form-check-label" for="editRemindMe">Remind me</label><br>
+                            <label class="form-label">Get Notification for the event</label>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-danger rounded-pill" ng-click="clearEditForm()">Clear</button>
+                            <button type="submit" class="btn btn-success rounded-pill" ng-disabled="eventEditForm.$invalid">Update Event</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
